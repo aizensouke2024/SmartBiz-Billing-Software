@@ -5,8 +5,14 @@ import os
 # Get project folder location
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Database folder location
+DB_DIR = os.path.join(BASE_DIR, "database")
+
+# Automatically create database folder if missing
+os.makedirs(DB_DIR, exist_ok=True)
+
 # Database file location
-DB_PATH = os.path.join(BASE_DIR, "database", "smartbiz.db")
+DB_PATH = os.path.join(DB_DIR, "smartbiz.db")
 
 
 # Connect to database
@@ -20,7 +26,6 @@ def create_tables():
     connection = connect_db()
     cursor = connection.cursor()
 
-    # Businesses table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS businesses (
             business_id INTEGER PRIMARY KEY AUTOINCREMENT,

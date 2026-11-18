@@ -14,9 +14,9 @@ from pages.customers import show_customers_page
 from pages.billing import show_billing_page
 from pages.sales_history import show_sales_history_page
 from pages.invoice_history import show_invoice_history_page
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.ticker import FuncFormatter
+from matplotlib.figure import Figure  # type: ignore[import-not-found]
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # type: ignore[import-not-found]
+from matplotlib.ticker import FuncFormatter  # type: ignore[import-not-found]
 from pages.inventory import show_inventory_page
 
 # Appearance settings
