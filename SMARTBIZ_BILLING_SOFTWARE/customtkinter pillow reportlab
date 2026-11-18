@@ -1,0 +1,4 @@
+SmartBiz_Billing_Software/
+│
+├── .venv/
+└── requirements.txt
