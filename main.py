@@ -18,6 +18,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import FuncFormatter
 from pages.inventory import show_inventory_page
+from pages.reports import show_reports_page
+from pages.sales_report import show_sales_report
+from pages.settings import show_settings_page
 
 # Appearance settings
 create_tables()
@@ -34,7 +37,7 @@ class SmartBizApp(ctk.CTk):
         self.geometry("1100x700")
         self.minsize(900, 600)
 
-        self.configure(fg_color="#F4F6FA")
+        self.configure(fg_color=("#F4F6FA", "#111827"))
 
         # Main layout
         self.grid_columnconfigure(1, weight=1)
@@ -52,7 +55,7 @@ class SmartBizApp(ctk.CTk):
             self,
             width=220,
             corner_radius=0,
-            fg_color="#172B4D"
+            fg_color=("#172B4D", "#0B1220")
         )
         sidebar.grid(row=0, column=0, sticky="nsew")
         sidebar.grid_propagate(False)
@@ -75,6 +78,7 @@ class SmartBizApp(ctk.CTk):
     "Sales History",
     "Invoice History",
     "Reports",
+    "Sales Report",
     "Settings"
 ]
 
@@ -142,21 +146,45 @@ class SmartBizApp(ctk.CTk):
             show_inventory_page(self.content)
             return
 
+        if page_name == "Reports":
+            show_reports_page(self.content)
+            return
+
+        if page_name == "Sales Report":
+           show_sales_report(self.content)
+           return
+
+        if page_name == "Settings":
+            show_settings_page(self.content)
+            return
+
         heading = ctk.CTkLabel(
             self.content,
             text=page_name,
             font=("Arial", 28, "bold"),
-            text_color="#172B4D"
+            text_color=("#172B4D", "#F8FAFC")
         )
         heading.pack(anchor="w", pady=(10, 5))
 
+
         if page_name == "Dashboard":
 
+            # Detect application theme
+            is_dark = ctk.get_appearance_mode() == "Dark"
+
+            bg_color = "#111827" if is_dark else "#F4F6FA"
+            card_color = "#1F2937" if is_dark else "#FFFFFF"
+            text_color = "#F8FAFC" if is_dark else "#172B4D"
+            muted_color = "#CBD5E1" if is_dark else "#64748B"
+            grid_color = "#475569" if is_dark else "#CBD5E1"
+            bar_color = "#60A5FA" if is_dark else "#2563EB"
+
+            # Welcome
             welcome = ctk.CTkLabel(
                 self.content,
                 text="Welcome to SmartBiz Billing Software!",
                 font=("Arial", 16),
-                text_color="#64748B"
+                text_color=text_color
             )
             welcome.pack(anchor="w", pady=10)
 
@@ -182,7 +210,7 @@ class SmartBizApp(ctk.CTk):
 
                 card = ctk.CTkFrame(
                     cards_frame,
-                    fg_color="white",
+                    fg_color=card_color,
                     corner_radius=12
                 )
 
@@ -197,27 +225,26 @@ class SmartBizApp(ctk.CTk):
                     card,
                     text=title,
                     font=("Arial", 13),
-                    text_color="#64748B"
+                    text_color=muted_color
                 ).pack(pady=(20, 8))
 
                 ctk.CTkLabel(
                     card,
                     text=value,
                     font=("Arial", 23, "bold"),
-                    text_color="#172B4D"
+                    text_color=text_color
                 ).pack(pady=(0, 20))
 
+            # Monthly Sales Overview
             chart_title = ctk.CTkLabel(
                 self.content,
                 text="Monthly Sales Overview",
                 font=("Arial", 20, "bold"),
-                text_color="#172B4D"
+                text_color=text_color
             )
             chart_title.pack(anchor="w", pady=(20, 10))
 
             monthly_data = get_monthly_sales()
-
-            print("Monthly Sales Data:", monthly_data)
 
             months = [row[0] for row in monthly_data]
             sales = [row[1] / 100 for row in monthly_data]
@@ -225,20 +252,21 @@ class SmartBizApp(ctk.CTk):
             figure = Figure(
                 figsize=(8, 3.8),
                 dpi=100,
-                facecolor="#F4F6FA"
+                facecolor=bg_color
             )
 
             ax = figure.add_subplot(111)
-            ax.set_facecolor("white")
+            ax.set_facecolor(card_color)
 
             if months:
+
                 positions = list(range(len(months)))
 
                 bars = ax.bar(
                     positions,
                     sales,
                     width=0.45,
-                    color="#2563EB"
+                    color=bar_color
                 )
 
                 ax.set_xticks(positions)
@@ -247,61 +275,67 @@ class SmartBizApp(ctk.CTk):
                 for bar, amount in zip(bars, sales):
                     ax.annotate(
                         f"₹{amount:,.0f}",
-                        (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                        (bar.get_x() + bar.get_width() / 2,
+                         bar.get_height()),
                         ha="center",
                         va="bottom",
                         fontsize=10,
                         fontweight="bold",
+                        color=text_color,
                         xytext=(0, 6),
                         textcoords="offset points"
                     )
 
-                    ax.set_ylim(0, max(sales) * 1.25)
+                max_sales = max(sales)
+                ax.set_ylim(
+                    0,
+                    max_sales * 1.25 if max_sales > 0 else 1
+                )
 
                 ax.yaxis.set_major_formatter(
-                    FuncFormatter(lambda value, position: f"₹{value:,.0f}")
+                    FuncFormatter(
+                        lambda value, position: f"₹{value:,.0f}"
+                    )
                 )
+
             else:
+
                 ax.text(
                     0.5, 0.5,
                     "No sales data available yet",
                     ha="center",
                     va="center",
+                    color=text_color,
                     transform=ax.transAxes
                 )
 
-            ax.set_ylabel("Sales")
-            ax.set_xlabel("Month")
+            ax.set_ylabel("Sales", color=text_color)
+            ax.set_xlabel("Month", color=text_color)
+
             ax.set_title(
                 "Monthly Sales Performance",
                 fontsize=14,
                 fontweight="bold",
+                color=text_color,
                 pad=20
+            )
+
+            ax.tick_params(
+                axis="both",
+                colors=muted_color
             )
 
             ax.grid(
                 axis="y",
                 linestyle="--",
-                alpha=0.25
+                color=grid_color,
+                alpha=0.35
             )
 
             ax.set_axisbelow(True)
 
-            ax.spines["top"].set_visible(False)
-            ax.spines["right"].set_visible(False)
-
-            figure.tight_layout()
-
-            canvas = FigureCanvasTkAgg(
-                figure,
-                master=self.content
-            )
-            canvas.draw()
-            ax.bar(months, sales, color="#2563EB")
-
-            ax.set_ylabel("Sales (₹)")
-            ax.set_xlabel("Month")
-            ax.set_title("Monthly Sales Performance")
+            for spine in ax.spines.values():
+                spine.set_color(grid_color)
 
             figure.tight_layout()
 
@@ -312,20 +346,17 @@ class SmartBizApp(ctk.CTk):
 
             canvas.draw()
 
-            canvas.get_tk_widget().pack(
+            canvas_widget = canvas.get_tk_widget()
+
+            canvas_widget.configure(
+                bg=bg_color,
+                highlightthickness=0
+            )
+
+            canvas_widget.pack(
                 fill="x",
                 pady=10
             )
-
-        else:
-            message = ctk.CTkLabel(
-                self.content,
-                text=f"{page_name} section will be developed soon.",
-                font=("Arial", 16),
-                text_color="#64748B"
-            )
-            message.pack(anchor="w", pady=20)
-
 
 # Start application
 if __name__ == "__main__":

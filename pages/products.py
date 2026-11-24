@@ -59,7 +59,7 @@ except ModuleNotFoundError:
                 self._command(self._variable.get())
 
     class CTkScrollableFrame(tk.Frame):
-        def __init__(self, master=None, width=None, height=None, **kwargs):
+        def __zinit__(self, master=None, width=None, height=None, **kwargs):
             super().__init__(master, width=width, height=height, **kwargs)
 
     class _CompatCTk:
@@ -135,6 +135,62 @@ def show_products_page(parent):
 
     message = ctk.CTkLabel(parent, text="")
     message.pack(pady=5)
+
+
+    def save_product():
+
+        name = entries["Product Name"].get().strip()
+        code = entries["Product Code"].get().strip()
+
+        try:
+            price = float(entries["Price (₹)"].get())
+            stock = int(entries["Stock Quantity"].get())
+            gst = float(entries["GST Rate (%)"].get())
+
+            if not name:
+                raise ValueError("Product name is required.")
+
+            if price < 0 or stock < 0 or gst < 0:
+                raise ValueError("Values cannot be negative.")
+
+        except ValueError as e:
+            messagebox.showerror(
+                "Invalid Input",
+                str(e) or "Enter valid product details."
+            )
+            return
+
+        business_id = business_names[selected_business.get()]
+
+        try:
+            add_product(
+                business_id,
+                name,
+                code,
+                round(price * 100),
+                stock,
+                gst
+            )
+
+            messagebox.showinfo(
+                "Success",
+                "Product saved successfully!"
+            )
+
+            for entry in entries.values():
+                entry.delete(0, "end")
+
+            display_products()
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    ctk.CTkButton(
+        parent,
+        text="Save Product",
+        width=200,
+        command=save_product
+    ).pack(pady=12)
 
     product_list = ctk.CTkScrollableFrame(parent, width=650, height=180)
     product_list.pack(fill="both", expand=True, pady=10)

@@ -10,7 +10,8 @@ from database import (
     get_invoice_items,
     get_invoice_details,
     get_business_details,
-    get_customers
+    get_customers,
+    move_invoice_to_trash
 )
 
 
@@ -214,6 +215,7 @@ def show_invoice_history_page(parent):
         pady=20
     )
 
+    
     def load_invoices(selected_business=None):
 
         for widget in invoice_frame.winfo_children():
@@ -266,14 +268,55 @@ def show_invoice_history_page(parent):
                 font=("Arial", 15, "bold")
             ).pack(anchor="w", padx=15, pady=5)
 
+            
+            buttons_frame = ctk.CTkFrame(invoice_card)
+            buttons_frame.pack(anchor="e", padx=15, pady=10)
+
             ctk.CTkButton(
-                invoice_card,
+                buttons_frame,
                 text="View Details",
                 command=lambda inv_id=invoice[0]: show_invoice_details(
                     inv_id,
                     parent
                 )
-            ).pack(anchor="e", padx=15, pady=10)
+            ).pack(side="left", padx=5)
+
+            ctk.CTkButton(
+                buttons_frame,
+                text="Move to Trash",
+                fg_color="#B83232",
+                hover_color="#8F2020",
+                command=lambda inv_id=invoice[0], bid=business_id:
+                    delete_invoice(inv_id, bid)
+            ).pack(side="left", padx=5)
+
+
+    def delete_invoice(invoice_id, business_id):
+
+        confirm = messagebox.askyesno(
+            "Move Invoice to Trash",
+            "Move this invoice to the Recycle Bin?\n\n"
+            "You can restore it later from Settings."
+        )
+
+        if not confirm:
+            return
+
+        try:
+            move_invoice_to_trash(invoice_id, business_id)
+
+            messagebox.showinfo(
+                "Success",
+                "Invoice moved to Recycle Bin!"
+            )
+
+            load_invoices()
+
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                str(e)
+            )
 
     business_menu.configure(command=load_invoices)
 

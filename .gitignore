@@ -17,3 +17,4 @@ tempCodeRunnerFile.py
 
 # Environment variables
 .env
+database/*.backup
