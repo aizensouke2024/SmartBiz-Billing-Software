@@ -5,8 +5,14 @@ import os
 # Get project folder location
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Database folder location
+DB_DIR = os.path.join(BASE_DIR, "database")
+
+# Automatically create database folder if missing
+os.makedirs(DB_DIR, exist_ok=True)
+
 # Database file location
-DB_PATH = os.path.join(BASE_DIR, "database", "smartbiz.db")
+DB_PATH = os.path.join(DB_DIR, "smartbiz.db")
 
 
 # Connect to database
@@ -42,16 +48,19 @@ def get_business_daily_sales(business_id):
 
     return sales
 
+
 def get_business_month_comparison(business_id):
     connection = connect_db()
     cursor = connection.cursor()
 
     cursor.execute(
         """
-        SELECT strftime('%Y-%m', created_at) as month, SUM(total_paise) as total
+        SELECT strftime('%Y-%m', invoice_date) as month,
+               COALESCE(SUM(total_paise), 0) as total
         FROM invoices
         WHERE business_id = ?
-          AND created_at >= DATE('now', '-1 month')
+          AND deleted_at IS NULL
+          AND invoice_date >= DATE('now', '-1 month')
         GROUP BY month
         ORDER BY month
         """,
